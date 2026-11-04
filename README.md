@@ -5,7 +5,7 @@ This is online test for gathering data about whether the color or size of dots d
 There are 28 pictures of dots to estimate in total. User is promted to guess the number of dots based on very brief exposure of the picture (500 ms).
 
 ## Results
-
+Here is a [link](https://docs.google.com/spreadsheets/d/1Ed5Qfzxa87Dj-ZQPny_VgJ6wEUm5NSuZu0bWwoUl7c4/edit?usp=sharing) for Google sheet with data results.
 ## Images
 There are 4 categories of images:
 - same color, same size (pictures 01-07)
