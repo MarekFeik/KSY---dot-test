@@ -141,6 +141,8 @@ const CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbxK3xvC0sOJWh_Udgs6Ooruvilc_1iMWDC1bRP8TXr6ZJUazFm_qCdnLvvEv3XFOgvB_w/exec', // adresa nasazené Web App (viz návod níže)
   FORCE_CANVAS: false,         // true = vždy použít generované tečky (vývoj bez obrázků)
   SHUFFLE: true,               // náhodné pořadí ostrých pokusů
+  TRIALS_PER_SESSION: 15,      // kolik obrázků z STIMULI uvidí jeden účastník (0 nebo víc než jich je = všechny)
+  SAMPLING: 'stratified',      // 'stratified' = rovnoměrně přes rozsah počtů teček, 'random' = čistě náhodně
   MIN_AGE: 1, MAX_AGE: 120,
   MAX_ESTIMATE: 999
 };
@@ -445,8 +447,26 @@ async function runPractice() {
   $('btn-start').focus();
 }
 
+/* Vybere pro jednoho účastníka TRIALS_PER_SESSION obrázků ze STIMULI.
+   stratified: obrázky se seřadí podle true_count, rozdělí na k přibližně stejných skupin
+   a z každé se náhodně vybere jeden, takže výběr pokrývá celý rozsah 5–80 a nehrozí,
+   že se náhodou sejdou jen malé nebo jen velké počty. */
+function pickStimuli() {
+  const k = CONFIG.TRIALS_PER_SESSION;
+  if (!k || k >= STIMULI.length) return [...STIMULI];
+  if (CONFIG.SAMPLING === 'random') return shuffle([...STIMULI]).slice(0, k);
+  const sorted = shuffle([...STIMULI]).sort((a, b) => a.true_count - b.true_count);   // shuffle rozhodne remízy
+  const n = sorted.length, picked = [];
+  for (let j = 0; j < k; j++) {
+    const lo = Math.floor(j * n / k), hi = Math.floor((j + 1) * n / k);   // skupina j: indexy lo až hi-1
+    picked.push(sorted[lo + Math.floor(Math.random() * (hi - lo))]);
+  }
+  return picked;
+}
+
 async function runMain() {
-  const order = CONFIG.SHUFFLE ? shuffle([...STIMULI]) : [...STIMULI];
+  const chosen = pickStimuli();
+  const order = CONFIG.SHUFFLE ? shuffle(chosen) : chosen;
   for (let i = 0; i < order.length; i++) {
     const res = await runTrial(order[i], 'Test ' + (i + 1) + ' z ' + order.length);
     state.trials.push(buildRecord(order[i], res, i + 1));
